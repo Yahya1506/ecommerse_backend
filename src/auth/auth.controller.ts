@@ -26,6 +26,7 @@ export class AuthController {
     }
 
     @UseGuards(AuthGuard('refreshJwt'))
+    @ApiBearerAuth()
     @Post('logout')
     async logout(@User() user:{id: number, email: string , jti: string}){
         return await this.auth.revokeSession(user.jti);

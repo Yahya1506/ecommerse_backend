@@ -3,10 +3,11 @@ import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestj
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProductDto, FilterDto, PaginationDto, ReviewDto, UpdateProductDto } from './dto';
 import { FeedbackService } from 'src/feedback/feedback.service';
+import { ImageService } from 'src/image/image.service';
 
 @Injectable()
 export class ProductService {
-    constructor(private prisma:PrismaService, private review:FeedbackService){}
+    constructor(private prisma:PrismaService, private review:FeedbackService, private image:ImageService){}
 
     async createProduct( product: CreateProductDto){
 
@@ -154,6 +155,18 @@ export class ProductService {
             throw new NotFoundException("product does not exist");
         }
         return this.review.getReviews(rating, page);
+    }
+
+    async uploadImage(file:Express.Multer.File, id:number){
+        const productExists = await this.prisma.product.findUnique({
+            where:{id:id}
+        });
+        
+        if(!productExists){
+            throw new NotFoundException("product does not exist");
+        }
+
+        return this.image.uploadImage(id,file.filename);
     }
 
     async creatProductReview(uid: number, pid:number, review: ReviewDto){
