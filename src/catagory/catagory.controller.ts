@@ -1,11 +1,12 @@
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, UseFilters, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { CatagoryDto } from './dto';
 import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { CatagoryService } from './catagory.service';
+import { HttpExceptionFilter } from 'src/filters/http-exception/http-exception.filter';
 
-
+@UseFilters(HttpExceptionFilter)
 @Controller('catagories')
 export class CatagoryController {
     constructor(private catagory:CatagoryService){}

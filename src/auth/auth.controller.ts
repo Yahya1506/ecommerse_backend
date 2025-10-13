@@ -1,11 +1,14 @@
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseFilters, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto, LoginDto } from './dto';
 import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from 'src/decorator/getUser.decorator';
+import { HttpExceptionFilter } from 'src/filters/http-exception/http-exception.filter';
 
+
+@UseFilters(HttpExceptionFilter)
 @Controller('auth')
 export class AuthController {
     constructor(private auth:AuthService){}
@@ -20,6 +23,12 @@ export class AuthController {
     @ApiBody({ type: CreateUserDto })
     async signup(@Body() user: CreateUserDto){
         return await this.auth.signup(user);
+    }
+
+    @UseGuards(AuthGuard('refreshJwt'))
+    @Post('logout')
+    async logout(@User() user:{id: number, email: string , jti: string}){
+        return await this.auth.revokeSession(user.jti);
     }
 
     @UseGuards(AuthGuard('refreshJwt'))

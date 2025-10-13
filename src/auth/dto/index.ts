@@ -1,2 +1,3 @@
 /* eslint-disable prettier/prettier */
-export * from './auth.dto'
+export * from './createUser.dto'
+export * from './login.dto'

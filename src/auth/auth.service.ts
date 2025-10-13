@@ -153,4 +153,24 @@ export class AuthService {
         });
         return session;
     }
+
+    async revokeSession(jti:string){
+        const token = await this.prisma.refreshToken.findUnique({
+            where:{id:jti}
+        })
+
+        if(!token){
+            throw new NotFoundException("token not in db");
+        }
+        const invalidated = await this.prisma.refreshToken.update({
+             where:{
+                id: jti
+            },
+            data:{
+                invalidatedAt : new Date()
+            }
+        });
+        
+        return invalidated;
+    }
 }

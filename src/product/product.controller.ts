@@ -1,11 +1,13 @@
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Delete, Get, Param, ParseBoolPipe, ParseIntPipe, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, UseFilters, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from 'src/decorator/getUser.decorator';
 import { CreateProductDto, FilterDto, PaginationDto, ReviewDto, UpdateProductDto } from './dto';
 import { ProductService } from './product.service';
 import { ApiBearerAuth, ApiBody, ApiQuery } from '@nestjs/swagger';
+import { HttpExceptionFilter } from 'src/filters/http-exception/http-exception.filter';
 
+@UseFilters(HttpExceptionFilter)
 @Controller('products')
 export class ProductController {
 

@@ -3,7 +3,6 @@ import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestj
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProductDto, FilterDto, PaginationDto, ReviewDto, UpdateProductDto } from './dto';
 import { FeedbackService } from 'src/feedback/feedback.service';
-import { filter } from 'rxjs';
 
 @Injectable()
 export class ProductService {

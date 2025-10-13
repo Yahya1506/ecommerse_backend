@@ -27,17 +27,3 @@ export class CreateUserDto{
     @IsOptional()
     lname?:string
 }
-
-
-export class LoginDto{
-    @ApiProperty()
-    @IsEmail()
-    @IsNotEmpty()
-    @IsString()
-    email:string
-
-    @ApiProperty()
-    @IsNotEmpty()
-    @IsString()
-    password:string
-}
