@@ -2,9 +2,9 @@
 import { Body, Controller, Delete, Get, Param, ParseBoolPipe, ParseIntPipe, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from 'src/decorator/getUser.decorator';
-import { CreateProductDto, PaginationDto, ReviewDto, UpdateProductDto } from './dto';
+import { CreateProductDto, FilterDto, PaginationDto, ReviewDto, UpdateProductDto } from './dto';
 import { ProductService } from './product.service';
-import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiQuery } from '@nestjs/swagger';
 
 @Controller('products')
 export class ProductController {
@@ -18,18 +18,14 @@ export class ProductController {
         return await this.product.createProduct(product)
     }
 
-    @ApiBody({type:PaginationDto})
-    @Get()
+    @Get() 
+    @ApiBody({type:FilterDto})
     async getProducts(
         @Query() page:PaginationDto,
-        @Query('search') search?: string, 
-        @Query('catagory') catagory?:string, 
-        @Query('min',new ParseIntPipe({optional:true})) min?:number, 
-        @Query('max',new ParseIntPipe({optional:true})) max?:number,
-        @Query('inStock',new ParseBoolPipe({optional:true})) instock?:boolean
+        @Query() filters:FilterDto
     ){
         
-        return await this.product.getAllProducts(page,search,catagory,min,max,instock);
+        return await this.product.getAllProducts(page,filters);
     }
 
     @Get(':id')
@@ -74,14 +70,13 @@ export class ProductController {
         return await this.product.creatProductReview(user.id, id,review);
     }
 
-
-    @UseGuards(AuthGuard('jwt'))
-    @ApiBearerAuth()
     @Get(':id/reviews')
+    @ApiQuery({ name: 'rating', required: false, type: Number })
+    @ApiBody({type:PaginationDto})
     async getProductReviews(
         @Param('id',ParseIntPipe) id:number,
-        @Query(ParseIntPipe) page:PaginationDto,
-        @Query('rating',ParseIntPipe) rating?: number
+        @Query() page:PaginationDto,
+        @Query('rating',new ParseIntPipe({ optional: true })) rating?: number
     ){
         return await this.product.getProductReviews(id,rating,page);
     }

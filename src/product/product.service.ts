@@ -1,8 +1,9 @@
 /* eslint-disable prettier/prettier */
 import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateProductDto, PaginationDto, ReviewDto, UpdateProductDto } from './dto';
+import { CreateProductDto, FilterDto, PaginationDto, ReviewDto, UpdateProductDto } from './dto';
 import { FeedbackService } from 'src/feedback/feedback.service';
+import { filter } from 'rxjs';
 
 @Injectable()
 export class ProductService {
@@ -38,8 +39,8 @@ export class ProductService {
         }
     }
 
-    async getAllProducts( page:PaginationDto, search?: string, cat?: string, min?: number, max?: number, instock?: boolean) {
-        console.log(page,search,cat,min,max,instock);
+    async getAllProducts( page:PaginationDto, filters:FilterDto) {
+        console.log(filters);
         const products = await this.prisma.product.findMany({
             take:page.take,
             skip: page.cursor?1:0,
@@ -47,28 +48,28 @@ export class ProductService {
                 id:page.cursor
             }:undefined,
             where: {
-                ...(search && {
+                ...(filters.search && {
                     name: {
-                        startsWith: search,
+                        startsWith: filters.search,
                         mode: 'insensitive' 
                     }
                 }),
 
-                ...(cat && {
+                ...(filters.catagory && {
                     catagory: {        
-                          cat_name:cat  
+                          cat_name:filters.catagory  
                     }
                 }),
 
                 // Apply only if 'min' or 'max' are provided
-                ...((min || max) && {
+                ...((filters.min || filters.max) && {
                     price: {
-                        ...(min && { gte: min }),
-                        ...(max && { lte: max })
+                        ...(filters.min && { gte: filters.min }),
+                        ...(filters.max && { lte: filters.max })
                     }
                 }),
-                ...(instock !== undefined && {
-                    stock: instock ? { gt: 0 } : 0
+                ...(filters.instock !== undefined && {
+                    stock: filters.instock ? { gt: 0 } : 0
                 })
             },
             select:{

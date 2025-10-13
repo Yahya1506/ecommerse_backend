@@ -8,17 +8,41 @@ export class FeedbackService {
     constructor(private prisma: PrismaService){}
 
     async createReview(uid: number, pid:number, review:ReviewDto){
-        const createdReview = await this.prisma.feedback.create({
-            data:{
-                rating:review.rating,
-                review:review.review,
-                product_id:pid,
-                user_id:uid
+        const feedback = await this.prisma.feedback.findFirst({
+            where:{
+                user_id: uid,
+                product_id : pid
             }
-        });
-        if(createdReview){
-            throw new HttpException("review created successfully",HttpStatus.CREATED);
+        })
+
+        if(feedback){
+            const updatedReview = await this.prisma.feedback.update({
+                    where: { id: feedback.id },
+                    data: {
+                    rating: review.rating,
+                    review: review.review,
+                },
+            });
+            if(updatedReview){
+            throw new HttpException("review Updated successfully",HttpStatus.CREATED);
         }
+        
+        } else {
+            const createdReview = await this.prisma.feedback.create({
+                data: {
+                rating: review.rating,
+                review: review.review,
+                product_id: pid,
+                user_id: uid,
+                },
+            });
+            if(createdReview){
+                throw new HttpException("review created successfully",HttpStatus.CREATED);
+            }
+        }
+
+        
+        
     }
 
     async deleteReview(uid: number,pid: number, rid: number){

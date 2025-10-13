@@ -1,7 +1,8 @@
 /* eslint-disable prettier/prettier */
 import { IsInt, IsNotEmpty, IsOptional, IsPositive, IsString, Min, Max } from "@nestjs/class-validator"
-import { ApiProperty } from "@nestjs/swagger"
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger"
 import { Type } from "class-transformer"
+import { IsNumberString } from "class-validator"
 
 
 
@@ -76,8 +77,37 @@ export class PaginationDto{
     take: number = 4;
 
     @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     @Type(()=>Number)
     @Min(0)
     cursor?: number;
+}
+
+export class FilterDto{
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    search:string
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    catagory:string
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @Type(()=>Number)
+    min:number
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @Type(()=>Number)
+    max:number
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @Type(()=>Boolean)
+    instock:boolean
 }
