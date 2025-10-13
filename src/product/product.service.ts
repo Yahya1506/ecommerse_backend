@@ -1,0 +1,185 @@
+/* eslint-disable prettier/prettier */
+import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateProductDto, PaginationDto, ReviewDto, UpdateProductDto } from './dto';
+import { FeedbackService } from 'src/feedback/feedback.service';
+
+@Injectable()
+export class ProductService {
+    constructor(private prisma:PrismaService, private review:FeedbackService){}
+
+    async createProduct( product: CreateProductDto){
+
+        const catExists = await this.prisma.catagory.findUnique({
+            where:{
+                id:product.cat_id
+            }
+        });
+
+        if(!catExists){
+            throw new NotFoundException("this catagory does not exists");
+        }
+
+        const createdProduct = await this.prisma.product.create({
+            data:{
+                name:product.name,
+                price: product.price,
+                description: product.description,
+                catagory:{
+                    connect:{
+                        id: product.cat_id
+                    }
+                }
+            }
+        });
+
+        if (createdProduct){
+            throw new HttpException(`${createdProduct.name} has been created`,HttpStatus.CREATED)
+        }
+    }
+
+    async getAllProducts( page:PaginationDto, search?: string, cat?: string, min?: number, max?: number, instock?: boolean) {
+        console.log(page,search,cat,min,max,instock);
+        const products = await this.prisma.product.findMany({
+            take:page.take,
+            skip: page.cursor?1:0,
+            cursor:page.cursor?{
+                id:page.cursor
+            }:undefined,
+            where: {
+                ...(search && {
+                    name: {
+                        startsWith: search,
+                        mode: 'insensitive' 
+                    }
+                }),
+
+                ...(cat && {
+                    catagory: {        
+                          cat_name:cat  
+                    }
+                }),
+
+                // Apply only if 'min' or 'max' are provided
+                ...((min || max) && {
+                    price: {
+                        ...(min && { gte: min }),
+                        ...(max && { lte: max })
+                    }
+                }),
+                ...(instock !== undefined && {
+                    stock: instock ? { gt: 0 } : 0
+                })
+            },
+            select:{
+                id:true,
+                name:true,
+                price:true,
+                description:true,
+                catagory:{
+                    select:{
+                        cat_name:true
+                    }
+                }
+
+            },
+            orderBy:{
+                createdAt:'asc'
+            }
+        });
+        
+        const newCursor = (products.length == page.take)? products[page.take - 1].id : null;
+        return {
+            newCursor,
+            data:products,
+            nextPage: (products.length === page.take)
+        }
+
+    }
+
+
+    async updateProduct(id:number,product:UpdateProductDto){
+        const productExists = await this.prisma.product.findUnique({
+            where:{
+                id:id
+            }
+        });
+        if(!productExists){
+            throw new NotFoundException("product not found");
+        }
+
+        const updateProduct = await this.prisma.product.update({
+            where:{
+                id:id
+            },
+            data:{
+                name:product.name,
+                description: product.description,
+                price:product.price
+            }
+        })
+
+        return updateProduct
+    }
+
+    async deleteProduct(id:number){
+        const productExists = await this.prisma.product.findUnique({
+            where:{
+                id:id
+            }
+        });
+        if (!productExists){
+            throw new NotFoundException("product does not exist");
+        }
+
+        const deleted = await this.prisma.product.delete({
+            where:{
+                id:id
+            }
+        });
+
+        if (deleted){
+            throw new HttpException("deleted successfuly",HttpStatus.OK);
+        }
+
+    }
+
+    async getProductReviews(pid: number, rating: number|undefined, page:PaginationDto){
+        const productExists = await this.prisma.product.findUnique({
+            where:{
+                id:pid
+            }
+        });
+        if (!productExists){
+            throw new NotFoundException("product does not exist");
+        }
+        return this.review.getReviews(rating, page);
+    }
+
+    async creatProductReview(uid: number, pid:number, review: ReviewDto){
+        const productExists = await this.prisma.product.findUnique({
+            where:{
+                id:pid
+            }
+        });
+        if (!productExists){
+            throw new NotFoundException("product does not exist");
+        }
+
+        return await this.review.createReview(uid,pid,review);
+
+    }
+
+    async deleteProductReview(uid: number, pid: number, rid: number){
+        const productExists = await this.prisma.product.findUnique({
+            where:{
+                id:pid
+            }
+        });
+        if(!productExists){
+            throw new NotFoundException("product does not exist");
+        }
+        return this.review.deleteReview(uid, pid, rid);
+    }
+    
+}

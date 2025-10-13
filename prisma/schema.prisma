@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User{
+
+  id Int @id @default(autoincrement())
+  fname String?
+  lname String?
+  password String?
+  email String @unique
+  googleId String? 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Feedback Feedback[]
+  RefreshToken RefreshToken[]
+  @@map("users")
+}
+
+model Product{
+  id Int @id @default(autoincrement())
+  name String
+  cat_id Int 
+  price Int
+  stock Decimal @default(0)
+  description String?
+  catagory Catagory @relation(fields: [cat_id], references: [id])
+  Image Image[]
+  Feedback Feedback[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("products")
+}
+
+model Catagory{
+  id Int @id @default(autoincrement())
+  cat_name String @unique
+  Products Product[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("catagories")
+}
+
+model Feedback{
+  id Int @id @default(autoincrement())
+  rating Decimal @db.Decimal(2,1)
+  review String?
+  user_id Int
+  product_id Int
+  user User @relation(fields: [user_id], references: [id])
+  product Product @relation(fields: [product_id], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("feedbacks")
+}
+
+model Image{
+  id Int @id @default(autoincrement())
+  path String
+  product_id Int
+  product Product @relation(fields: [product_id], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("images")
+}
+
+model RefreshToken {
+  id     String @id @default(uuid()) // unique session id (jti in JWT)
+  userId Int // FK to User
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt     DateTime  @default(now())
+  expiresAt     DateTime // when the session naturally expires
+  invalidatedAt DateTime? // set when you log out / revoke
+
+  @@map("refreshTokens")
+}
