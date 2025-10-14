@@ -6,9 +6,10 @@ import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from 'src/decorator/getUser.decorator';
 import { HttpExceptionFilter } from 'src/filters/http-exception/http-exception.filter';
+import { SessionGuard } from './gaurd/token-validation.gaurd';
 
 
-@UseFilters(HttpExceptionFilter)
+//@UseFilters(HttpExceptionFilter)
 @Controller('auth')
 export class AuthController {
     constructor(private auth:AuthService){}
@@ -22,13 +23,14 @@ export class AuthController {
     @Post('signup')
     @ApiBody({ type: CreateUserDto })
     async signup(@Body() user: CreateUserDto){
+        console.log('hello')
         return await this.auth.signup(user);
     }
 
-    @UseGuards(AuthGuard('refreshJwt'))
+    @UseGuards(SessionGuard)
     @ApiBearerAuth()
     @Post('logout')
-    async logout(@User() user:{id: number, email: string , jti: string}){
+    async logout(@User() user:{jti: string}){
         return await this.auth.revokeSession(user.jti);
     }
 

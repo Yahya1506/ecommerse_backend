@@ -71,7 +71,7 @@ export class FeedbackService {
 
     }
 
-    async getReviews(rating: number|undefined, page:PaginationDto){
+    async getReviews(rating: number|undefined, page:PaginationDto, sortBy?: string){
 
         const reviews = await this.prisma.feedback.findMany({
             where:rating? {
@@ -82,7 +82,9 @@ export class FeedbackService {
             cursor: page.cursor? {
                 id:page.cursor
             }:undefined,
-            orderBy:{
+            orderBy:(sortBy && sortBy==='rating')?{
+                rating:'desc'
+            }:{
                 createdAt: 'desc'
             }
         });

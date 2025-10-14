@@ -30,10 +30,12 @@ export class ProductController {
     @ApiBody({type:FilterDto})
     async getProducts(
         @Query() page:PaginationDto,
-        @Query() filters:FilterDto
+        @Query() filters:FilterDto,
+        @Query('sort_by') sortBy?:'asc'|'desc',
+        @Query('order') order?:'asc'|'desc',
     ){
         
-        return await this.product.getAllProducts(page,filters);
+        return await this.product.getAllProducts(page,filters,sortBy,order);
     }
 
     @Get(':id')
@@ -126,9 +128,10 @@ export class ProductController {
     async getProductReviews(
         @Param('id',ParseIntPipe) id:number,
         @Query() page:PaginationDto,
-        @Query('rating',new ParseIntPipe({ optional: true })) rating?: number
+        @Query('rating',new ParseIntPipe({ optional: true })) rating?: number,
+        @Query('sort_by') sortBy?:string,
     ){
-        return await this.product.getProductReviews(id,rating,page);
+        return await this.product.getProductReviews(id,rating,page,sortBy);
     }
 
 

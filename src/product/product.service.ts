@@ -42,7 +42,7 @@ export class ProductService {
         }
     }
 
-    async getAllProducts( page:PaginationDto, filters:FilterDto) {
+    async getAllProducts( page:PaginationDto, filters:FilterDto, sortBy?:string, order?: 'asc'| 'desc') {
         console.log(filters);
         const products = await this.prisma.product.findMany({
             take:page.take,
@@ -87,7 +87,9 @@ export class ProductService {
                 }
 
             },
-            orderBy:{
+            orderBy:(sortBy && (sortBy==='price' || sortBy==='rating'))?{
+                [sortBy]:order?order:'desc'
+            }:{
                 createdAt:'asc'
             }
         });
@@ -148,7 +150,7 @@ export class ProductService {
 
     }
 
-    async getProductReviews(pid: number, rating: number|undefined, page:PaginationDto){
+    async getProductReviews(pid: number, rating: number|undefined, page:PaginationDto, orderBy?: string){
         const productExists = await this.prisma.product.findUnique({
             where:{
                 id:pid
@@ -157,7 +159,7 @@ export class ProductService {
         if (!productExists){
             throw new NotFoundException("product does not exist");
         }
-        return this.review.getReviews(rating, page);
+        return this.review.getReviews(rating, page,orderBy);
     }
 
     async uploadImage(file:Express.Multer.File, id:number){
