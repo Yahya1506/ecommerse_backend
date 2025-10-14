@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, UploadedFile, UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, MaxFileSizeValidator, Param, ParseFilePipe, ParseIntPipe, Post, Put, Query, Res, UploadedFile, UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from 'src/decorator/getUser.decorator';
 import { CreateProductDto, FilterDto, PaginationDto, ReviewDto, UpdateProductDto } from './dto';
@@ -10,14 +10,14 @@ import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { v4 as uuidv4 } from 'uuid'
 import { existsSync, mkdirSync } from 'fs';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { ProductExistsInterceptor } from 'src/common/interceptors/product/product.interceptor';
+import { HttpExceptionFilter } from 'src/filters/http-exception/http-exception.filter';
 
-//@UseFilters(HttpExceptionFilter)
+@UseFilters(HttpExceptionFilter)
 @Controller('products')
 export class ProductController {
 
-    constructor(private product:ProductService, private prisma:PrismaService){}
+    constructor(private product:ProductService){}
 
     @UseGuards(AuthGuard('jwt'))
     @ApiBearerAuth()
@@ -37,7 +37,9 @@ export class ProductController {
     }
 
     @Get(':id')
-    getProduct(){}
+    getProduct(@Param('id', ParseIntPipe) productId:number){
+        return this.product.productDetail(productId);
+    }
 
 
     @UseGuards(AuthGuard('jwt'))
@@ -76,14 +78,20 @@ export class ProductController {
                 },
               }),
               fileFilter: (req, file, cb) => {
-                if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
+                if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png' || file.mimetype === 'image/jpeg' || file.mimetype === 'image/webp') {
                   cb(null, true);
                 } else {
                   cb(new Error('Only images are allowed...'), false);
                 }
               },
     }))
-    uploadProductImage(@UploadedFile() file:Express.Multer.File,@Param('id',ParseIntPipe) id: number){
+    uploadProductImage(@UploadedFile(
+        new ParseFilePipe({
+            validators: [
+              new MaxFileSizeValidator({ maxSize: 1024 * 1024 * 5 }), // 5MB limit
+            ],
+          }),
+    ) file:Express.Multer.File,@Param('id',ParseIntPipe) id: number){
         return this.product.uploadImage(file,id);
     }
 
@@ -91,7 +99,14 @@ export class ProductController {
     @UseGuards(AuthGuard('jwt'))
     @ApiBearerAuth()
     @Delete(':id/images/:imageId')
-    deleteProductImage(){}
+    deleteProductImage(
+        @Param('id', ParseIntPipe) productId:number,
+        @Param('imageId', ParseIntPipe) imageId: number
+    ){
+        const path = join(process.cwd(), 'uploads', 'product', String(productId));
+        console.log(path)
+        return this.product.deleteProductImage(path, productId, imageId);
+    }
 
 
     @UseGuards(AuthGuard('jwt'))

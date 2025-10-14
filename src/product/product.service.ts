@@ -4,6 +4,9 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProductDto, FilterDto, PaginationDto, ReviewDto, UpdateProductDto } from './dto';
 import { FeedbackService } from 'src/feedback/feedback.service';
 import { ImageService } from 'src/image/image.service';
+import { join } from 'path';
+import { existsSync } from 'fs';
+import { Response } from 'express';
 
 @Injectable()
 export class ProductService {
@@ -167,6 +170,70 @@ export class ProductService {
         }
 
         return this.image.uploadImage(id,file.filename);
+    }
+
+    async deleteProductImage(path:string, productId:number, imageId:number){
+        const productExists = await this.prisma.product.findUnique({
+            where:{id:productId}
+        });
+        
+        if(!productExists){
+            throw new NotFoundException("product does not exist");
+        }
+        return this.image.deleteImage(path,imageId);
+    }
+
+    async productDetail(productId: number){
+        const productExists = await this.prisma.product.findUnique({
+            where:{id:productId},
+            select:{
+                id:true,
+                name:true,
+                description:true,
+                stock:true,
+                price:true,
+                catagory:{
+                    select:{ cat_name:true}
+                },
+                Feedback:{
+                    select:{
+                        user_id:true,
+                        rating:true,
+                        review:true
+                    }
+                }
+            }
+        });
+        
+        if(!productExists){
+            throw new NotFoundException("product does not exist");
+        }
+
+        const images = await this.prisma.image.findMany({
+                where:{product_id:productId},
+                select:{path:true}
+        });
+
+        const allImages: string[] = [];
+        images.forEach(image => {
+            allImages.push(join(String(productId),image.path));
+        });
+        console.log(allImages);
+
+        const aggregations = await this.prisma.feedback.groupBy({
+            by:["product_id"],
+            where:{product_id:productId},
+            _avg:{
+                rating: true
+            },
+            _count:{
+                rating:true
+            },
+        });
+        const averageRating = aggregations[0]._avg.rating;
+        const reviewCount = aggregations[0]._count.rating;
+        
+        return {productDetail:productExists, averageRating, reviewCount, images:allImages};
     }
 
     async creatProductReview(uid: number, pid:number, review: ReviewDto){

@@ -4,10 +4,10 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { join } from 'path';
-import { existsSync, mkdirSync } from 'fs';
+import { NestApplication } from '@nestjs/core';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestApplication>(AppModule);
    app.useGlobalPipes(new ValidationPipe(
     {
       transform:true,
@@ -15,10 +15,9 @@ async function bootstrap() {
     }
    ));
 
-  const uploadDir = join(process.cwd(),'uploads')
-  if(!existsSync(uploadDir)){
-    mkdirSync(uploadDir)
-  }
+  app.useStaticAssets(join(__dirname, '..', 'uploads'),{
+    prefix:'/product',
+  })
   const config = new DocumentBuilder()
         .setTitle('Ecommerse Backend API')
         .setDescription('a backend api for your ecommerse app')

@@ -2,6 +2,7 @@
 
 import { IsEmail, IsNotEmpty, IsString } from "@nestjs/class-validator"
 import { ApiProperty } from "@nestjs/swagger"
+import { MinLength } from "class-validator"
 
 export class LoginDto{
     @ApiProperty()
@@ -13,5 +14,6 @@ export class LoginDto{
     @ApiProperty()
     @IsNotEmpty()
     @IsString()
+    @MinLength(8)
     password:string
 }
