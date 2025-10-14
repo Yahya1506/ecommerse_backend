@@ -83,7 +83,7 @@ export class FeedbackService {
                 id:page.cursor
             }:undefined,
             orderBy:{
-                createdAt: 'asc'
+                createdAt: 'desc'
             }
         });
         const newCursor = (reviews.length == page.take )? reviews[page.take - 1].id:null;

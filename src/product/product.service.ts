@@ -64,7 +64,7 @@ export class ProductService {
                     }
                 }),
 
-                // Apply only if 'min' or 'max' are provided
+            
                 ...((filters.min || filters.max) && {
                     price: {
                         ...(filters.min && { gte: filters.min }),

@@ -4,7 +4,7 @@ import { ApiProperty } from "@nestjs/swagger";
 
 export class CatagoryDto{
 
-    @ApiProperty()
+    @ApiProperty({example:'Mobiles'})
     @IsString()
     @IsNotEmpty()
     cat_name:string

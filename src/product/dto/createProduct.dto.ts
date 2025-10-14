@@ -6,12 +6,12 @@ import { ApiProperty, } from "@nestjs/swagger"
 
 export class CreateProductDto{
 
-    @ApiProperty()
+    @ApiProperty({example:'samsung galaxy a15'})
     @IsNotEmpty()
     @IsString()
     name: string
   
-    @ApiProperty()
+    @ApiProperty({example:'50000'})
     @IsNotEmpty()
     @IsInt()
     @IsPositive()

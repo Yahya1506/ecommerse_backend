@@ -6,25 +6,25 @@ import { MinLength } from "class-validator"
 
 export class CreateUserDto{
 
-    @ApiProperty()
+    @ApiProperty({example:'abc@mail.com'})
     @IsEmail()
     @IsNotEmpty()
     @IsString()
     email:string
 
 
-    @ApiProperty()
+    @ApiProperty({example:'password@1234'})
     @IsNotEmpty()
     @IsString()
     @MinLength(8)
     password:string
 
-    @ApiPropertyOptional()
+    @ApiPropertyOptional({example:'John'})
     @IsString()
     @IsOptional()
     fname?:string
 
-    @ApiPropertyOptional()
+    @ApiPropertyOptional({example:'Doe'})
     @IsString()
     @IsOptional()
     lname?:string
