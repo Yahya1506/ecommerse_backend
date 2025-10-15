@@ -4,7 +4,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { User } from 'src/decorator/getUser.decorator';
 import { CreateProductDto, FilterDto, PaginationDto, ReviewDto, UpdateProductDto } from './dto';
 import { ProductService } from './product.service';
-import { ApiBearerAuth, ApiBody, ApiQuery } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiQuery } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { existsSync, mkdirSync } from 'fs';
 import { ProductExistsInterceptor } from 'src/common/interceptors/product/product.interceptor';
 import { HttpExceptionFilter } from 'src/filters/http-exception/http-exception.filter';
+import { FileDto } from './dto';
 
 @UseFilters(HttpExceptionFilter)
 @Controller('products')
@@ -28,10 +29,12 @@ export class ProductController {
 
     @Get() 
     @ApiBody({type:FilterDto})
+    @ApiQuery({ name: 'order', required: false, type: Number })
+    @ApiQuery({ name: 'sortBy', required: false, type: String })
     async getProducts(
         @Query() page:PaginationDto,
         @Query() filters:FilterDto,
-        @Query('sort_by') sortBy?:'asc'|'desc',
+        @Query('sortBy') sortBy?:'asc'|'desc',
         @Query('order') order?:'asc'|'desc',
     ){
         
@@ -62,6 +65,8 @@ export class ProductController {
     @UseGuards(AuthGuard('jwt'))
     @ApiBearerAuth()
     @Post(':id/images')
+    @ApiBody({type:FileDto})
+    @ApiConsumes('multipart/form-data')
     @UseInterceptors(ProductExistsInterceptor,FileInterceptor('file', {
         storage: diskStorage({
                 destination: (req, file, cb) => {  
@@ -93,7 +98,7 @@ export class ProductController {
               new MaxFileSizeValidator({ maxSize: 1024 * 1024 * 5 }), // 5MB limit
             ],
           }),
-    ) file:Express.Multer.File,@Param('id',ParseIntPipe) id: number){
+    ) file:FileDto,@Param('id',ParseIntPipe) id: number){
         return this.product.uploadImage(file,id);
     }
 
@@ -124,12 +129,13 @@ export class ProductController {
 
     @Get(':id/reviews')
     @ApiQuery({ name: 'rating', required: false, type: Number })
+    @ApiQuery({ name: 'sortBy', required: false, type: String })
     @ApiBody({type:PaginationDto})
     async getProductReviews(
         @Param('id',ParseIntPipe) id:number,
         @Query() page:PaginationDto,
         @Query('rating',new ParseIntPipe({ optional: true })) rating?: number,
-        @Query('sort_by') sortBy?:string,
+        @Query('sortBy') sortBy?:string,
     ){
         return await this.product.getProductReviews(id,rating,page,sortBy);
     }

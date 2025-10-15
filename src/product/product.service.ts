@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable prettier/prettier */
 import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -7,6 +8,7 @@ import { ImageService } from 'src/image/image.service';
 import { join } from 'path';
 import { existsSync } from 'fs';
 import { Response } from 'express';
+import { FileDto } from './dto';
 
 @Injectable()
 export class ProductService {
@@ -162,7 +164,7 @@ export class ProductService {
         return this.review.getReviews(rating, page,orderBy);
     }
 
-    async uploadImage(file:Express.Multer.File, id:number){
+    async uploadImage(file:FileDto, id:number){
         const productExists = await this.prisma.product.findUnique({
             where:{id:id}
         });
@@ -171,7 +173,7 @@ export class ProductService {
             throw new NotFoundException("product does not exist");
         }
 
-        return this.image.uploadImage(id,file.filename);
+        return this.image.uploadImage(id,file.file.filename);
     }
 
     async deleteProductImage(path:string, productId:number, imageId:number){
