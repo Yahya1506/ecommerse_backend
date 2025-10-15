@@ -45,7 +45,6 @@ export class ProductService {
     }
 
     async getAllProducts( page:PaginationDto, filters:FilterDto, sortBy?:string, order?: 'asc'| 'desc') {
-        console.log(filters);
         const products = await this.prisma.product.findMany({
             take:page.take,
             skip: page.cursor?1:0,
@@ -92,7 +91,7 @@ export class ProductService {
             orderBy:(sortBy && (sortBy==='price' || sortBy==='rating'))?{
                 [sortBy]:order?order:'desc'
             }:{
-                createdAt:'asc'
+                createdAt:'desc'
             }
         });
         
