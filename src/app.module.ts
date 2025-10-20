@@ -7,11 +7,14 @@ import { CatagoryModule } from './catagory/catagory.module';
 import { ImageModule } from './image/image.module';
 import { FeedbackModule } from './feedback/feedback.module';
 import { PrismaModule } from './prisma/prisma.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { MulterModule } from '@nestjs/platform-express';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { ScheduleModule } from '@nestjs/schedule';
+import { TaskSchedularModule } from './task-schedular/task-schedular.module';
+import { MailerModule } from '@nestjs-modules/mailer';
 
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -24,6 +27,26 @@ import { join } from 'path';
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..','uploads/products'),
     }),
+    MailerModule.forRootAsync({
+        imports: [ConfigModule],
+        useFactory:  (config: ConfigService) => ({
+          transport: {
+            host: 'smtp.gmail.com',
+            port: 465,              // or 587 for STARTTLS
+            secure: true,          // true for port 465
+            auth: {
+              user: config.get('Email'),     // your Gmail address
+              pass: config.get('Email_Password'),     // your app password (you said it's in env var `Email`)
+            },
+          },
+          defaults: {
+            from: `"No Reply" <${config.get('EMAIL')}>`,
+          },
+        }),
+      inject: [ConfigService],
+    }),
+    ScheduleModule.forRoot(),
+    TaskSchedularModule,
     MulterModule,
     AuthModule,
     UserModule,

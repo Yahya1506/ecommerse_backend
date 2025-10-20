@@ -6,7 +6,6 @@ import { CreateProductDto, FilterDto, PaginationDto, ReviewDto, UpdateProductDto
 import { FeedbackService } from 'src/feedback/feedback.service';
 import { ImageService } from 'src/image/image.service';
 import { join } from 'path';
-import { existsSync } from 'fs';
 import { Response } from 'express';
 import { FileDto } from './dto';
 
