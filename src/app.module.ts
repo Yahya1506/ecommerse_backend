@@ -15,6 +15,8 @@ import { join } from 'path';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TaskSchedularModule } from './task-schedular/task-schedular.module';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { SpreadsheetModule } from './spreadsheet/spreadsheet.module';
+import { WebhookModule } from './webhook/webhook.module';
 
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -55,7 +57,9 @@ import { MailerModule } from '@nestjs-modules/mailer';
     ImageModule, 
     FeedbackModule, 
     PrismaModule,
-    JwtModule
+    JwtModule,
+    SpreadsheetModule,
+    WebhookModule
   ]
   
 })

@@ -11,7 +11,7 @@ export class TaskSchedularService {
   constructor(private prisma: PrismaService, private mailerService: MailerService) {}
 
   
-  @Cron(CronExpression.EVERY_MINUTE,{timeZone:'Asia/Karachi'})
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT,{timeZone:'Asia/Karachi'})
   async deleteExpiredTokens() {
     try {
       const result = await this.prisma.refreshToken.deleteMany({

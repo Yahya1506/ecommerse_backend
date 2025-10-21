@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProductDto, FilterDto, PaginationDto, ReviewDto, UpdateProductDto } from './dto';
@@ -8,13 +8,20 @@ import { ImageService } from 'src/image/image.service';
 import { join } from 'path';
 import { Response } from 'express';
 import { FileDto } from './dto';
+import { SpreadsheetService } from 'src/spreadsheet/spreadsheet.service';
 
 @Injectable()
 export class ProductService {
-    constructor(private prisma:PrismaService, private review:FeedbackService, private image:ImageService){}
+
+    constructor(
+        private prisma:PrismaService, 
+        private review:FeedbackService, 
+        private image:ImageService,
+        private spreadsheet: SpreadsheetService
+    ){}
 
     async createProduct( product: CreateProductDto){
-
+        
         const catExists = await this.prisma.catagory.findUnique({
             where:{
                 id:product.cat_id
@@ -24,7 +31,7 @@ export class ProductService {
         if(!catExists){
             throw new NotFoundException("this catagory does not exists");
         }
-
+        
         const createdProduct = await this.prisma.product.create({
             data:{
                 name:product.name,
@@ -35,10 +42,21 @@ export class ProductService {
                         id: product.cat_id
                     }
                 }
+                
+            },
+            include:{
+                catagory:true
             }
         });
 
         if (createdProduct){
+            this.spreadsheet.addRow([
+                createdProduct.id,
+                createdProduct.name,
+                createdProduct.description,
+                createdProduct.price,
+                createdProduct.catagory.cat_name
+            ]);
             throw new HttpException(`${createdProduct.name} has been created`,HttpStatus.CREATED)
         }
     }
@@ -122,9 +140,18 @@ export class ProductService {
                 name:product.name,
                 description: product.description,
                 price:product.price
+            },
+            include:{
+                catagory:true
             }
         })
-
+        await this.spreadsheet.updateRow(updateProduct.id,[
+            updateProduct.id,
+            updateProduct.name,
+            updateProduct.description,
+           updateProduct.price,
+            updateProduct.catagory.cat_name
+        ])
         return updateProduct
     }
 
@@ -263,5 +290,5 @@ export class ProductService {
         }
         return this.review.deleteReview(uid, pid, rid);
     }
-    
+
 }
