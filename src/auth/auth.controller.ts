@@ -2,58 +2,68 @@
 import { Body, Controller, Get, Post, UseFilters, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto, LoginDto } from './dto';
-import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from 'src/decorator/getUser.decorator';
 import { HttpExceptionFilter } from 'src/filters/http-exception/http-exception.filter';
 import { SessionGuard } from './gaurd/token-validation.gaurd';
 
-
-//@UseFilters(HttpExceptionFilter)
+@UseFilters(HttpExceptionFilter)
+@ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-    constructor(private auth:AuthService){}
+  constructor(private readonly authService: AuthService) {}
 
-    @Post('login')
-    @ApiBody({ type: LoginDto })
-    async login(@Body() user: LoginDto){
-        return await this.auth.login(user);
-    }
+  /* ---------- LOGIN ---------- */
+  @Post('login')
+  @ApiBody({ type: LoginDto })
+  async login(@Body() payload: LoginDto) {
+    return this.authService.login(payload);
+  }
 
-    @Post('signup')
-    @ApiBody({ type: CreateUserDto })
-    async signup(@Body() user: CreateUserDto){
-        console.log('hello')
-        return await this.auth.signup(user);
-    }
+  /* ---------- SIGNUP ---------- */
+  @Post('signup')
+  @ApiBody({ type: CreateUserDto })
+  async signup(@Body() payload: CreateUserDto) {
+    console.log("signup reached")
+    return this.authService.signup(payload);
+  }
 
-    @UseGuards(SessionGuard)
-    @ApiBearerAuth()
-    @Post('logout')
-    async logout(@User() user:{jti: string}){
-        return await this.auth.revokeSession(user.jti);
-    }
+  /* ---------- LOGOUT (Revoke Refresh Session) ---------- */
+  @UseGuards(SessionGuard)
+  @ApiBearerAuth()
+  @Post('logout')
+  async logout(@User() user: { jti: string }) {
+    return this.authService.revokeRefreshSession(user.jti);
+  }
 
-    @UseGuards(AuthGuard('refreshJwt'))
-    @ApiBearerAuth()
-    @Post('refresh')
-    refreshtoken(@User() user:{id: number, email: string , jti: string}){
-        return this.auth.newAccessToken(user);
-        
-    }
+  /* ---------- REFRESH TOKEN ---------- */
+  @UseGuards(AuthGuard('refreshJwt'))
+  @ApiBearerAuth()
+  @Post('refresh')
+  async refreshToken(@User() user: { id: number; email: string; jti: string }) {
+    return this.authService.generateNewAccessToken(user);
+  }
 
+  /* ---------- GOOGLE LOGIN FLOW ---------- */
+  @UseGuards(AuthGuard('google'))
+  @Get('google')
+  googleAuth() {
+    // Handled by passport-google strategy
+  }
 
-    @UseGuards(AuthGuard('google'))
-    @Get('google')
-    googleAuth(){
-
-    }
-
-    @UseGuards(AuthGuard('google'))
-    @Get('google/callback')
-    googleAuthCallback(@User() user:{provider:string, googleId:string, email:string,fname:string, lname:string}){
-       return this.auth.googleLogin(user);
-    }
-
-    
+  @UseGuards(AuthGuard('google'))
+  @Get('google/callback')
+  async googleAuthCallback(
+    @User()
+    user: {
+      provider: string;
+      googleId: string;
+      email: string;
+      fname: string;
+      lname: string;
+    },
+  ) {
+    return this.authService.googleLogin(user);
+  }
 }

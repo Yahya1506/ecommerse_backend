@@ -14,7 +14,7 @@ import { ProductExistsInterceptor } from 'src/common/interceptors/product/produc
 import { HttpExceptionFilter } from 'src/filters/http-exception/http-exception.filter';
 import { FileDto } from './dto';
 
-//@UseFilters(HttpExceptionFilter)
+@UseFilters(HttpExceptionFilter)
 @Controller('products')
 export class ProductController {
 

@@ -6,9 +6,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './strategy/jwt.strategy';
 import { RefreshTokenStrategy } from './strategy/refreshToken.strategy';
 import { GoogleStrategy } from './strategy/google.strategy';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
-  imports: [JwtModule.register({})],
+  imports: [JwtModule.register({}),UserModule],
   controllers: [AuthController],
   providers: [AuthService,JwtStrategy,RefreshTokenStrategy,GoogleStrategy]
 })

@@ -16,7 +16,7 @@ export class CatagoryController {
         return await this.catagory.getCatagories();
     }
 
-    @UseGuards(AuthGuard('jwt'))
+    //@UseGuards(AuthGuard('jwt'))
     @ApiBearerAuth()
     @Post()
     @ApiBody({type:CatagoryDto})
@@ -25,7 +25,7 @@ export class CatagoryController {
     }
 
 
-    @UseGuards(AuthGuard('jwt'))
+    //@UseGuards(AuthGuard('jwt'))
     @ApiBearerAuth()
     @Put(':id')
     @ApiBody({type:CatagoryDto})
