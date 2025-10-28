@@ -4,26 +4,34 @@ import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestj
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as fsPromises from 'fs/promises';
 import { join } from 'path';
+import { handlePrismaError } from 'src/utils/prismaErrors';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ImageService {
-    constructor(private prisma: PrismaService){}
+    constructor(private prismaService: PrismaService){}
 
 
-    async uploadImage(id: number, fileName: string){
-        const image = await this.prisma.image.create({
-            data:{
-                path:fileName,
-                product_id:id
-            }
-        });
-        if(image){
-            return image
+    async createImage(id: number, fileName: string){
+        try{
+            const createdImage = await this.prismaService.image.create({
+                data:{
+                    path:fileName,
+                    product_id:id
+                }
+            });
+            
+            return {message:"image created and uploaded successfully", data:createdImage}
+        } catch(error) {
+            if(error instanceof HttpException) throw error;
+            return handlePrismaError(error);
         }
+        
     }
 
     async deleteImage(path:string, imageId:number){
-        const image = await this.prisma.image.findUnique({
+        try {
+        const image = await this.prismaService.image.findUnique({
             where:{id: imageId},
         })
         if(!image){
@@ -31,24 +39,25 @@ export class ImageService {
         }
         
         const filePath = join(path,image.path);
-        try {
+        
         await fsPromises.unlink(filePath);
-            console.log(`File deleted successfully: ${filePath}`);
-        } catch (error) {
-            if (error.code === 'ENOENT') {
-                console.warn(`File not found: ${filePath}`);
-            } else {
-                console.error(`Error deleting file ${filePath}: ${error.message}`);
-                throw new HttpException('Failed to delete file',HttpStatus.INTERNAL_SERVER_ERROR); 
-            }
-        }
-
-        const deleted = await this.prisma.image.delete({
+        const deletedImage = await this.prismaService.image.delete({
             where:{id: imageId},
         })
 
-        if(deleted){
-            return {deleted, message: "image successfully deleted"};
+        
+        return {message: "image successfully deleted", data: deletedImage};
+        } catch (error) {
+            if(error instanceof HttpException) throw error
+            else if(error instanceof Prisma.PrismaClientKnownRequestError)
+                return handlePrismaError(error)
+            else if (error.code === 'ENOENT') {
+                console.warn("File not found:");
+            } else {
+                console.error("Error deleting file");
+                throw new HttpException('Failed to delete file',HttpStatus.INTERNAL_SERVER_ERROR); 
+            }
         }
+        
     }
 }

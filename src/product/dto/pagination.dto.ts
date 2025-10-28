@@ -1,20 +1,24 @@
 /* eslint-disable prettier/prettier */
-import { IsNotEmpty, IsOptional, IsPositive, Min } from "@nestjs/class-validator"
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger"
-import { Type } from "class-transformer"
+import { IsOptional, IsPositive, Min } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 
-export class PaginationDto{
+export class PaginationDto {
+  @ApiPropertyOptional({
+    description: 'The current page number (starts from 1)',
+    example: 1,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsPositive()
+  page?: number;
 
-    @ApiProperty()
-    @IsNotEmpty()
-    @Type(()=>Number)
-    @IsPositive()
-    take: number = 4;
-
-    @ApiProperty()
-    @ApiPropertyOptional()
-    @IsOptional()
-    @Type(()=>Number)
-    @Min(0)
-    cursor?: number;
+  @ApiPropertyOptional({
+    description: 'Number of records to display per page',
+    example: 10,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @Min(1)
+  limit?: number;
 }

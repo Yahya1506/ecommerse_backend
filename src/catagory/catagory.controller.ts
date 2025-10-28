@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable prettier/prettier */
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, UseFilters, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { CatagoryDto } from './dto';
+import { CategoryDto } from './dto';
 import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { CatagoryService } from './catagory.service';
 import { HttpExceptionFilter } from 'src/filters/http-exception/http-exception.filter';
@@ -19,17 +20,17 @@ export class CatagoryController {
     //@UseGuards(AuthGuard('jwt'))
     @ApiBearerAuth()
     @Post()
-    @ApiBody({type:CatagoryDto})
-    async createCatagory(@Body() catagory:CatagoryDto){
+    @ApiBody({type:CategoryDto})
+    async createCatagory(@Body() catagory:CategoryDto){
         return await this.catagory.createCatagory(catagory);
     }
 
 
-    //@UseGuards(AuthGuard('jwt'))
+    @UseGuards(AuthGuard('jwt'))
     @ApiBearerAuth()
     @Put(':id')
-    @ApiBody({type:CatagoryDto})
-    async updateCatagories(@Body() catagory:CatagoryDto, @Param('id',ParseIntPipe) id: number){
+    @ApiBody({type:CategoryDto})
+    async updateCatagories(@Body() catagory:CategoryDto, @Param('id',ParseIntPipe) id: number){
         return await this.catagory.updateCatagory(catagory,id)
     }
 

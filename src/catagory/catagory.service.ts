@@ -2,20 +2,20 @@
 /* eslint-disable no-useless-catch */
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CatagoryDto } from './dto';
+import { CategoryDto } from './dto';
 import { handlePrismaError } from 'src/utils/prismaErrors';
 
 @Injectable()
 export class CatagoryService {
-    constructor(private prisma: PrismaService){}
+    constructor(private prismaService: PrismaService){}
 
     async getCatagories(){
-        return this.prisma.catagory.findMany();
+        return this.prismaService.catagory.findMany();
     }
         
-    async createCatagory(payload: CatagoryDto) {
+    async createCatagory(payload: CategoryDto) {
     try {
-      const cat = await this.prisma.catagory.create({
+      const cat = await this.prismaService.catagory.create({
         data: {
           cat_name: payload.cat_name,
         },
@@ -27,9 +27,9 @@ export class CatagoryService {
     }
   }
 
-    async updateCatagory(catagory:CatagoryDto, cid:number){
+    async updateCatagory(catagory:CategoryDto, cid:number){
         try {
-            const updated_cat = await this.prisma.catagory.update({
+            const updated_cat = await this.prismaService.catagory.update({
               where:{
                   id:cid
               },
@@ -46,7 +46,7 @@ export class CatagoryService {
     }
     async deleteCatagory(cid:number){
       try {
-         await this.prisma.catagory.delete({
+         await this.prismaService.catagory.delete({
             where:{
                 id : cid
             }
@@ -57,6 +57,9 @@ export class CatagoryService {
         return handlePrismaError(error);
       }
         
+    }
+    async findCatagory(id:number){
+      return this.prismaService.catagory.findUnique({ where:{ id } });
     }
       
 }

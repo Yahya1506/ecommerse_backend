@@ -15,7 +15,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import type { RefreshToken } from 'generated/prisma';
+import type { RefreshToken } from '@prisma/client';
 import { Prisma } from '@prisma/client';
 import { UserService } from 'src/user/user.service';
 import dayjs from 'dayjs';
@@ -23,9 +23,9 @@ import dayjs from 'dayjs';
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly config: ConfigService,
-    private readonly jwt: JwtService,
+    private readonly prismaService: PrismaService,
+    private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
     private readonly userService: UserService
   ) {}
 
@@ -64,7 +64,7 @@ export class AuthService {
     lname: string;
   }) {
     try {
-        const existingUser = await this.prisma.user.findFirst({
+        const existingUser = await this.prismaService.user.findFirst({
             where: { googleId: payload.googleId },
         });
         let id:any = existingUser?.id;
@@ -95,10 +95,10 @@ export class AuthService {
         }
 
         payload.password = await this.hashPassword(payload.password);
-
-        if(await this.userService.createUser(payload)){
-            return {message: "account created successfully"}
-        }
+        const user = await this.userService.createUser(payload)
+        
+        return {message: "account created successfully", data:user}
+        
 
     } catch (error) {
         if (error instanceof HttpException) throw error;
@@ -109,9 +109,9 @@ export class AuthService {
   /* ---------- GENERATE NEW ACCESS TOKEN ---------- */
   async generateNewAccessToken(payload: { id: number; email: string; jti: string }) {
     try {
-      const newAccessToken = await this.jwt.signAsync(payload, {
+      const newAccessToken = await this.jwtService.signAsync(payload, {
         expiresIn: '15m',
-        secret: this.config.get('JWT_SECRET'),
+        secret: this.configService.get('JWT_SECRET'),
       });
       return { new_access_token: newAccessToken };
     } catch {
@@ -130,21 +130,21 @@ export class AuthService {
 
   /* ---------- TOKEN SIGNING ---------- */
   private async signAccessToken(userId: number, email: string, jti: string) {
-    return this.jwt.signAsync(
+    return this.jwtService.signAsync(
       { id: userId, email, jti },
       {
         expiresIn: '15m',
-        secret: this.config.get('JWT_SECRET'),
+        secret: this.configService.get('JWT_SECRET'),
       },
     );
   }
 
   private async signRefreshToken(userId: number, email: string, jti: string) {
-    return this.jwt.signAsync(
+    return this.jwtService.signAsync(
       { id: userId, email, jti },
       {
         expiresIn: '1d',
-        secret: this.config.get('REFRESH_JWT_SECRET'),
+        secret: this.configService.get('REFRESH_JWT_SECRET'),
       },
     );
   }
@@ -155,14 +155,14 @@ private async createRefreshSession(userId: number): Promise<RefreshToken> {
   // Set expiry time to 7 days from now using dayjs
   const expiresAt = dayjs().add(7, 'day').toDate();
 
-  return this.prisma.refreshToken.create({
+  return this.prismaService.refreshToken.create({
     data: { userId, expiresAt },
   });
 }
 
 async revokeRefreshSession(sessionId: string) {
   try {
-    const session = await this.prisma.refreshToken.findUnique({
+    const session = await this.prismaService.refreshToken.findUnique({
       where: { id: sessionId },
     });
 
@@ -171,7 +171,7 @@ async revokeRefreshSession(sessionId: string) {
     }
 
     // Use dayjs for the invalidation timestamp as well
-    return this.prisma.refreshToken.update({
+    return this.prismaService.refreshToken.update({
       where: { id: sessionId },
       data: { invalidatedAt: dayjs().toDate() },
     });

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable prettier/prettier */
-import { PrismaClient } from '../generated/prisma'; // adjust if your path differs
+import { PrismaClient } from '@prisma/client'; // adjust if your path differs
 const prisma = new PrismaClient();
 
 async function main() {
